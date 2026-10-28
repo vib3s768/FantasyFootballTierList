@@ -67,6 +67,13 @@ main{max-width:1280px;margin:0 auto;padding:20px 24px 8px}
 .sortable-fallback{opacity:.95!important;filter:drop-shadow(0 12px 14px rgba(0,0,0,.35));z-index:99}
 .msg{text-align:center;padding:80px 0;color:var(--mute)}
 .poolwrap[hidden]{display:none}
+.star{position:absolute;right:6px;top:calc(var(--tb) + 6px);z-index:3;width:26px;height:26px;display:grid;place-items:center;padding:0;border:0;border-radius:50%;background:rgba(10,13,17,.6);color:#fff;opacity:0;transition:opacity .15s,transform .15s}
+.card:hover .star,.starred .star{opacity:1}
+@media(hover:none){.star{opacity:.85}}
+.star:hover{transform:scale(1.12)}
+.star svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
+.starred .star svg{fill:#f5b301;stroke:#f5b301}
+.starred .front{box-shadow:0 0 0 2px #f5b301,0 1px 3px rgba(18,23,29,.3)}
 #tiers{counter-reset:rk}
 .zone .card{counter-increment:rk}
 .num{display:none;position:absolute;left:6px;top:calc(var(--tb) + 6px);z-index:3;min-width:26px;height:26px;padding:0 6px;box-sizing:border-box;border-radius:13px;background:var(--turf);border:2px solid #fff;color:#fff;font:700 15px/22px 'Barlow Condensed';text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.4)}
@@ -129,7 +136,7 @@ dialog::backdrop{background:rgba(10,13,17,.6);backdrop-filter:blur(3px)}
 <script>
 // ---- Settings you can change ----
 const SEASON = 2026;                          // falls back to the previous season if no games are in yet
-const COUNTS = {QB:32, RB:75, WR:75, TE:32};  // players shown per position, chosen by Sleeper's own player ranking
+const COUNTS = {QB:32, RB:75, WR:75, TE:32};  // players shown per position, chosen by projected rest-of-season points (falls back to Sleeper's player ranking)
 const DEFAULT_TIERS = ['S','A','B','C','D'];
 const COLORS = ['#d9534a','#ec8f3e','#e2bf3d','#7fb35f','#3f9f8f','#4a86c5','#7b72be','#c4659a','#7d8590'];
 // ---------------------------------
@@ -138,8 +145,10 @@ const tiersEl = $('#tiers'), poolEl = $('#pool'), hideBtn = $('#hide');
 const uid = () => Math.random().toString(36).slice(2, 8);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const f1 = n => (typeof n === 'number' && isFinite(n)) ? n.toFixed(1) : '-';
-let DATA, pos = 'QB', state, hideMode = false, season = SEASON;
+let DATA, pos = 'QB', state, hideMode = false, season = SEASON, rankSrc = 'player rankings';
 const revealed = new Set();
+let STARS = new Set();
+try { STARS = new Set(JSON.parse(localStorage.getItem('ts:stars') || '[]')); } catch (e) {}
 
 async function getStats(yr, p) {
   for (const host of ['api.sleeper.com', 'api.sleeper.app']) {
@@ -165,9 +174,32 @@ async function getRaw(yr) {
   catch (e) { console.warn(e); return Promise.all(['QB','RB','WR','TE'].map(p => getStats(yr, p))); }
 }
 
+// Rest-of-season projections: sum of Sleeper's weekly PPR projections from the current week through week 18
+async function getProj(yr, w) {
+  const urls = [`https://api.sleeper.app/projections/nfl/${yr}/${w}?season_type=regular&position[]=QB&position[]=RB&position[]=WR&position[]=TE`,
+                `https://api.sleeper.app/v1/projections/nfl/regular/${yr}/${w}`];
+  for (const u of urls) {
+    try {
+      const j = await getJSON(u), m = {};
+      if (Array.isArray(j)) j.forEach(x => { if (x.player_id && x.stats && x.stats.pts_ppr != null) m[x.player_id] = x.stats.pts_ppr; });
+      else for (const id in j) if (j[id] && j[id].pts_ppr != null) m[id] = j[id].pts_ppr;
+      if (Object.keys(m).length) return m;
+    } catch (e) {}
+  }
+  return null;
+}
+async function getROS(yr) {
+  let w = 1;
+  try { const st = await getJSON('https://api.sleeper.app/v1/state/nfl'); if (+st.season === yr && st.season_type === 'regular') w = Math.max(1, +st.week || 1); } catch (e) {}
+  const maps = await Promise.all(Array.from({ length: 19 - w }, (_, i) => getProj(yr, w + i)));
+  const ros = {}; let n = 0;
+  maps.forEach(m => { if (!m) return; n++; for (const id in m) ros[id] = (ros[id] || 0) + (m[id] || 0); });
+  return n ? ros : null;
+}
+
 async function loadData() {
-  const c = JSON.parse(localStorage.getItem('ts:data5') || 'null');
-  if (c && Date.now() - c.t < 6 * 36e5) { season = c.season; return c.d; }
+  const c = JSON.parse(localStorage.getItem('ts:data6') || 'null');
+  if (c && Date.now() - c.t < 6 * 36e5) { season = c.season; rankSrc = c.by || rankSrc; return c.d; }
   let raw;
   for (let k = 0; k < 2; k++) {
     raw = await getRaw(season);
@@ -177,7 +209,11 @@ async function loadData() {
   const team = new Map();
   raw.slice(1).flat().forEach(x => { const t = x.team; if (t && x.stats) team.set(t, (team.get(t) || 0) + (x.stats.rec_tgt || 0)); });
   const d = {};
-  const rk = x => { const r = x.player.search_rank; return r > 0 && r < 1e6 ? r : 1e9; }; // Sleeper's overall player ranking
+  let ros = null;
+  try { ros = await getROS(season); } catch (e) { console.warn(e); }
+  rankSrc = ros ? 'rest-of-season projections' : 'player rankings';
+  const rk = x => { const r = x.player.search_rank, sr = r > 0 && r < 1e6 ? r : 1e8;   // projected ROS points first (best first), then Sleeper's ranking
+    return ros && ros[x.player_id] > 0 ? -ros[x.player_id] : sr; };
   ['QB','RB','WR','TE'].forEach((p, i) => {
     d[p] = raw[i].filter(x => x.player && x.stats && gp(x.stats) > 0 && typeof x.stats.pts_ppr === 'number')
       .sort((a, b) => b.stats.pts_ppr - a.stats.pts_ppr)
@@ -185,9 +221,9 @@ async function loadData() {
       .map(({ x, j }) => { const s = x.stats, g = gp(s), t = x.team || x.player.team || 'FA';
         return { id: String(x.player_id), name: `${x.player.first_name} ${x.player.last_name}`, team: t, pos: p,
           ppg: s.pts_ppr / g, ypc: s.rush_att ? s.rush_yd / s.rush_att : 0, tpg: (s.rec_tgt || 0) / g, snp: s.tm_off_snp ? s.off_snp / s.tm_off_snp : null,
-          ts: (s.rec_tgt || 0) / (team.get(t) || 1), td: s.pass_td || 0, int: s.pass_int || 0, s: pick(s), pr: j + 1 }; });
+          ts: (s.rec_tgt || 0) / (team.get(t) || 1), td: s.pass_td || 0, int: s.pass_int || 0, s: pick(s), pr: j + 1, ros: ros ? (ros[x.player_id] || 0) : null }; });
   });
-  localStorage.setItem('ts:data5', JSON.stringify({ t: Date.now(), season, d }));
+  localStorage.setItem('ts:data6', JSON.stringify({ t: Date.now(), season, d, by: rankSrc }));
   return d;
 }
 
@@ -200,10 +236,10 @@ function chips(p) {
 }
 function card(p) {
   const ini = p.name.split(' ').map(w => w[0]).join('').slice(0, 2);
-  const h = hideMode && !revealed.has(p.id) ? ' is-hidden' : '';
+  const h = (hideMode && !revealed.has(p.id) ? ' is-hidden' : '') + (STARS.has(p.id) ? ' starred' : '');
   return `<div class="card${h}" data-id="${p.id}"><div class="flip">
     <div class="face front" data-i="${esc(ini)}"><img loading="lazy" alt="" src="https://sleepercdn.com/content/nfl/players/${p.id}.jpg" onerror="this.remove()">
-    <div class="top"><span class="nm">${esc(p.name)}</span><span class="tm">${esc(p.team)}</span></div><i class="num"></i><div class="ov"><div class="st">${chips(p)}</div></div></div>
+    <div class="top"><span class="nm">${esc(p.name)}</span><span class="tm">${esc(p.team)}</span></div><i class="num"></i><button class="star" aria-label="Star player" title="Star"><svg viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9z"/></svg></button><div class="ov"><div class="st">${chips(p)}</div></div></div>
     <div class="face back"><span>${p.pos}</span></div></div></div>`;
 }
 
@@ -228,7 +264,7 @@ function render() {
     <div class="zone">${t.ids.filter(i => by[i]).map(i => card(by[i])).join('')}</div></section>`).join('');
   poolEl.innerHTML = DATA[pos].filter(p => !placed.has(p.id)).map(card).join('');
   const opts = { group: 'p', animation: 200, forceFallback: true, fallbackOnBody: true, fallbackTolerance: 4,
-    delay: 120, delayOnTouchOnly: true, ghostClass: 'ghost', onEnd: sync };
+    delay: 120, delayOnTouchOnly: true, ghostClass: 'ghost', filter: '.star', preventOnFilter: false, onEnd: sync };
   document.querySelectorAll('.zone').forEach(z => new Sortable(z, opts));
   new Sortable(poolEl, opts);
   count();
@@ -276,6 +312,17 @@ $('#tabs').onclick = e => {
   pos = b.dataset.p; state = loadState(); render();
 };
 
+// Star a player
+document.addEventListener('click', e => {
+  const b = e.target.closest('.star'); if (!b) return;
+  const c = b.closest('.card'); if (c.classList.contains('is-hidden')) return;
+  e.stopImmediatePropagation();
+  const on = !STARS.has(c.dataset.id);
+  on ? STARS.add(c.dataset.id) : STARS.delete(c.dataset.id);
+  c.classList.toggle('starred', on);
+  try { localStorage.setItem('ts:stars', JSON.stringify([...STARS])); } catch (e) {}
+});
+
 // Hide / reveal
 hideBtn.onclick = () => {
   hideMode = !hideMode; revealed.clear();
@@ -304,7 +351,7 @@ function tiles(p) {
     WR: [['Targets', n('rec_tgt')], ['TGT/G', f1(p.tpg)], ['TGT share', Math.round(p.ts * 100) + '%'], ['Rec', n('rec')],
          ['Catch %', pct(n('rec'), n('rec_tgt'))], ['Rec yds', n('rec_yd')], ['Yds/rec', rt(n('rec_yd'), n('rec'))], ['Rec TD', n('rec_td')]] };
   by.TE = by.WR;
-  return [['PPG', f1(p.ppg)], ['Games', n('gp')], ['PPR points', f1(n('pts_ppr'))], ...by[p.pos], ['Fumbles lost', n('fum_lost')]];
+  return [['PPG', f1(p.ppg)], ['Games', n('gp')], ['PPR points', f1(n('pts_ppr'))], ...by[p.pos], ['Fumbles lost', n('fum_lost')], ...(p.ros != null ? [['ROS proj', f1(p.ros)]] : [])];
 }
 const COLS = {
   QB: [['PPR', s => f1(v(s,'pts_ppr'))], ['C/A', s => `${v(s,'pass_cmp')}/${v(s,'pass_att')}`], ['Pass yds', s => v(s,'pass_yd')], ['TD', s => v(s,'pass_td')],
@@ -350,7 +397,7 @@ async function openPlayer(id) {
 }
 document.addEventListener('dblclick', e => {
   const c = e.target.closest('.card');
-  if (!c || !DATA || c.classList.contains('is-hidden') || Date.now() - (+c.dataset.just || 0) < 700) return;
+  if (e.target.closest('.star') || !c || !DATA || c.classList.contains('is-hidden') || Date.now() - (+c.dataset.just || 0) < 700) return;
   getSelection().removeAllRanges(); openPlayer(c.dataset.id);
 });
 $('#dx').onclick = () => $('#dlg').close();
@@ -359,7 +406,7 @@ $('#dlg').onclick = e => { if (e.target === $('#dlg')) $('#dlg').close(); };
 (async function init() {
   try {
     DATA = await loadData();
-    $('#sub').textContent = `${season} season, PPR. Stats via Sleeper`;
+    $('#sub').textContent = `${season} season, PPR. Sleeper stats, ordered by ${rankSrc}`;
     $('#msg').remove(); state = loadState(); render();
   } catch (err) {
     console.error(err);

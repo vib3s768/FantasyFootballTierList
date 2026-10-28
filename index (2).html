@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tier Sheet: fantasy football tier lists</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem('ts:theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')}catch(e){}</script>
+<style>
+:root{--bg:#e8ebee;--panel:#fff;--ink:#12171d;--mute:#6b7480;--line:#d3d8de;--hd:#12171d;--tile:#eef1f4;--dash:#aab2bc;--turf:#1d6b46;--turf2:#175738;--cw:128px;--ch:192px;--tb:40px}
+[data-theme=dark]{--bg:#0d1115;--panel:#171d24;--ink:#e8ecf0;--mute:#8d97a3;--line:#2a323c;--hd:#090c0f;--tile:#212a34;--dash:#3a4452;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.4 Barlow,system-ui,sans-serif}
+button{font:inherit;color:inherit;cursor:pointer}
+header{background:var(--hd);color:#fff;padding:14px 24px 0;display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px 32px}
+.brand{font:700 30px/1 'Barlow Condensed';letter-spacing:.01em;padding-bottom:12px}
+.brand small{display:block;font:400 13px Barlow;color:#9aa4b0;margin-top:4px;letter-spacing:0}
+nav{display:flex;gap:4px;flex:1}
+nav button{background:none;border:0;border-bottom:3px solid transparent;color:#9aa4b0;font:600 22px 'Barlow Condensed';padding:10px 18px 9px;transition:color .15s,border-color .15s}
+nav button:hover{color:#fff}
+nav button.on{color:#fff;border-color:#3fbf84}
+.acts{display:flex;gap:8px;padding-bottom:10px}
+.btn{border:1px solid #3a4452;background:#1c232c;color:#fff;border-radius:6px;padding:7px 14px;font-weight:500;transition:background .15s}
+.btn:hover{background:#2a3441}
+.btn.pri{background:#3fbf84;border-color:#3fbf84;color:#06261a;font-weight:600}
+.btn.pri:hover{background:#5ad199}
+main{max-width:1280px;margin:0 auto;padding:20px 24px 8px}
+.tier{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:8px;margin-bottom:8px;overflow:hidden}
+.lab{width:112px;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:8px;position:relative;color:#fff}
+.txt{font:700 30px/1.1 'Barlow Condensed';text-align:center;outline:0;min-width:40px;max-width:100%;overflow-wrap:anywhere;text-shadow:0 1px 2px rgba(0,0,0,.3);padding:0 4px;border-radius:4px}
+.txt:focus{background:rgba(0,0,0,.22)}
+.grip{position:absolute;left:6px;top:6px;cursor:grab;opacity:.7;font-size:15px;letter-spacing:-3px;user-select:none}
+.del{position:absolute;right:6px;top:3px;background:none;border:0;color:#fff;font-size:20px;opacity:.7;padding:0 4px}
+.del:hover{opacity:1}
+.sw{width:26px;height:16px;border:2px solid rgba(255,255,255,.8);border-radius:4px;padding:0;background:none;cursor:pointer}
+.sw::-webkit-color-swatch-wrapper{padding:0}.sw::-webkit-color-swatch{border:0;border-radius:2px}
+.zone,.pool{display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start}
+.zone{flex:1;padding:8px;min-height:calc(var(--ch) + 16px)}
+.add{width:100%;border:1.5px dashed var(--dash);background:none;border-radius:8px;padding:12px;color:var(--mute);font-weight:500}
+.add:hover{border-color:var(--turf);color:var(--turf)}
+.poolwrap{position:sticky;bottom:0;background:var(--panel);border-top:1px solid var(--line);box-shadow:0 -8px 24px rgba(18,23,29,.08);margin-top:16px;max-height:40vh;overflow:auto;padding:10px 24px 14px;z-index:5}
+.poolwrap h2{font:600 20px 'Barlow Condensed';margin:0 0 8px;display:flex;gap:10px;align-items:baseline}
+.poolwrap h2 span{font:400 13px Barlow;color:var(--mute)}
+.pool{min-height:var(--ch);max-width:1232px;margin:0 auto}
+.card{width:var(--cw);height:var(--ch);perspective:800px;cursor:grab;flex:none;user-select:none;-webkit-user-select:none}
+.flip{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .8s cubic-bezier(.25,1.45,.45,1)}
+.is-hidden .flip{transform:rotateY(180deg)}
+.is-hidden{cursor:pointer}
+.face{position:absolute;inset:0;border-radius:8px;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden;box-shadow:0 1px 3px rgba(18,23,29,.3)}
+.front{background:#cfd5db}
+.front::before{content:attr(data-i);position:absolute;inset:var(--tb) 0 0 0;display:grid;place-items:center;font:700 44px 'Barlow Condensed';color:#9aa4b0}
+.front img{position:absolute;left:0;top:var(--tb);width:100%;height:calc(100% - var(--tb));object-fit:cover;object-position:50% 0}
+.top{position:absolute;left:0;right:0;top:0;height:var(--tb);padding:5px 8px 0;background:#12171d;color:#fff}
+.ov{position:absolute;left:0;right:0;bottom:0;padding:22px 6px 6px;background:linear-gradient(transparent,rgba(10,13,17,.9) 60%);color:#fff}
+.nm{font:700 16px/1.05 'Barlow Condensed';display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tm{font-size:11px;line-height:1.2;color:#9aa4b0;display:block}
+.st{display:flex;gap:0;border-top:1px solid rgba(255,255,255,.2);padding-top:4px}
+.st div{flex:1;text-align:center}
+.st b{display:block;font:600 15px/1 'Barlow Condensed'}
+.st i{font-style:normal;font-size:9px;color:#9aa4b0}
+.back{transform:rotateY(180deg);background:repeating-linear-gradient(90deg,var(--turf) 0 14px,var(--turf2) 14px 28px);display:grid;place-items:center;border:3px solid #fff;color:#fff;font:700 42px 'Barlow Condensed'}
+.back::after{content:"";position:absolute;left:0;right:0;top:50%;height:2px;background:rgba(255,255,255,.55)}
+.back span{background:var(--turf);padding:0 10px;border-radius:6px;z-index:1}
+.ghost{opacity:.3}
+.sortable-fallback{opacity:.95!important;filter:drop-shadow(0 12px 14px rgba(0,0,0,.35));z-index:99}
+.msg{text-align:center;padding:80px 0;color:var(--mute)}
+.poolwrap[hidden]{display:none}
+.poolwrap h2{max-width:1232px;margin:0 auto 8px;align-items:center}
+.poolwrap.min{overflow:hidden}.poolwrap.min .pool{display:none}.poolwrap.min h2{margin-bottom:0}
+.btn.pt{margin-left:auto;background:none;border:1px solid var(--line);color:var(--ink);font-size:13px;padding:3px 12px}
+.btn.pt:hover{background:var(--tile)}
+.btn.ic{padding:7px 9px;display:grid;place-items:center}
+.btn.ic svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.sun{display:none}[data-theme=dark] .sun{display:block}[data-theme=dark] .moon{display:none}
+.hint{font-size:13px;color:var(--mute);text-align:center;margin:10px 0 0}
+dialog{border:0;border-radius:12px;padding:0;width:min(780px,94vw);max-height:90vh;overflow:auto;color:var(--ink);background:var(--panel);box-shadow:0 24px 70px rgba(0,0,0,.4)}
+dialog::backdrop{background:rgba(10,13,17,.6);backdrop-filter:blur(3px)}
+.dh{display:flex;gap:16px;align-items:center;padding:18px 56px 18px 22px;background:var(--hd);color:#fff}
+.dh img{width:84px;height:84px;border-radius:10px;object-fit:cover;object-position:50% 8%;background:#2a3441;flex:none}
+.dh h3{font:700 34px/1 'Barlow Condensed';margin:0}
+.dh p{margin:4px 0 0;color:#9aa4b0}
+.x{position:absolute;top:8px;right:14px;background:none;border:0;color:#fff;font-size:30px;line-height:1}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px;padding:16px 22px}
+.tile{background:var(--tile);border-radius:8px;padding:9px 11px}
+.tile b{font:700 26px/1 'Barlow Condensed';display:block}
+.tile span{font-size:12px;color:var(--mute)}
+.log{padding:0 22px 22px;overflow-x:auto}
+.log h4{font:600 20px 'Barlow Condensed';margin:4px 0 6px}
+.log table{border-collapse:collapse;width:100%;font-size:14px}
+.log th,.log td{padding:6px 9px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+.log th:first-child,.log td:first-child{text-align:left}
+.log th{font-weight:600;font-size:13px;color:var(--mute)}
+.log td.pp{font-weight:600}
+@media(max-width:899px){.poolwrap{position:static;max-height:none}.lab{width:84px}}
+@media(prefers-reduced-motion:reduce){.flip{transition-duration:.01s}}
+:focus-visible{outline:2px solid #3fbf84;outline-offset:2px}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">Tier Sheet<small id="sub">Fantasy football rankings, PPR</small></div>
+  <nav id="tabs">
+    <button data-p="QB" class="on">QB</button><button data-p="RB">RB</button><button data-p="WR">WR</button><button data-p="TE">TE</button>
+  </nav>
+  <div class="acts">
+    <button class="btn ic" id="theme" aria-label="Toggle dark mode" title="Toggle dark mode">
+      <svg class="moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    </button>
+    <button class="btn" id="reset">Reset tab</button>
+    <button class="btn pri" id="hide">Hide players</button>
+  </div>
+</header>
+<main><div id="tiers"></div><button class="add" id="add">Add tier</button>
+<p class="hint">Double-click any player for season stats and game logs.</p></main>
+<div class="poolwrap"><h2>Unranked <span id="count"></span><button class="btn pt" id="ptog">Collapse</button></h2><div class="pool" id="pool"></div></div>
+<dialog id="dlg"><button class="x" id="dx" aria-label="Close">&times;</button><div id="dbody"></div></dialog>
+<div class="msg" id="msg">Loading player data...</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+<script>
+// ---- Settings you can change ----
+const SEASON = 2026;                          // falls back to the previous season if no games are in yet
+const COUNTS = {QB:32, RB:75, WR:75, TE:32};  // players shown per position, chosen by Sleeper's own player ranking
+const DEFAULT_TIERS = ['S','A','B','C','D'];
+const COLORS = ['#d9534a','#ec8f3e','#e2bf3d','#7fb35f','#3f9f8f','#4a86c5','#7b72be','#c4659a','#7d8590'];
+// ---------------------------------
+const $ = s => document.querySelector(s);
+const tiersEl = $('#tiers'), poolEl = $('#pool'), hideBtn = $('#hide');
+const uid = () => Math.random().toString(36).slice(2, 8);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const f1 = n => n.toFixed(1);
+let DATA, pos = 'QB', state, hideMode = false, season = SEASON;
+const revealed = new Set();
+
+async function getStats(yr, p) {
+  for (const host of ['api.sleeper.com', 'api.sleeper.app']) {
+    try {
+      const r = await fetch(`https://${host}/stats/nfl/${yr}?season_type=regular&position[]=${p}&order_by=pts_ppr`);
+      if (r.ok) { const j = await r.json(); if (Array.isArray(j)) return j; }
+    } catch (e) {}
+  }
+  throw new Error('Could not reach the stats service');
+}
+const gp = s => s.gp || s.gms_active || 0;
+let PLAYERS;
+async function getJSON(u) { const r = await fetch(u); if (!r.ok) throw new Error(r.status + ' ' + u); return r.json(); }
+async function getAll(yr) {
+  PLAYERS = PLAYERS || await getJSON('https://api.sleeper.app/v1/players/nfl');
+  const stats = await getJSON(`https://api.sleeper.app/v1/stats/nfl/regular/${yr}`);
+  const raw = { QB: [], RB: [], WR: [], TE: [] };
+  for (const id in stats) { const pl = PLAYERS[id]; if (pl && raw[pl.position]) raw[pl.position].push({ player_id: id, team: pl.team, player: pl, stats: stats[id] }); }
+  return ['QB','RB','WR','TE'].map(p => raw[p]);
+}
+async function getRaw(yr) {
+  try { return await getAll(yr); }
+  catch (e) { console.warn(e); return Promise.all(['QB','RB','WR','TE'].map(p => getStats(yr, p))); }
+}
+
+async function loadData() {
+  const c = JSON.parse(localStorage.getItem('ts:data3') || 'null');
+  if (c && Date.now() - c.t < 6 * 36e5) { season = c.season; return c.d; }
+  let raw;
+  for (let k = 0; k < 2; k++) {
+    raw = await getRaw(season);
+    if (raw[0].filter(x => x.stats && gp(x.stats) > 0).length >= 10) break;
+    season--;
+  }
+  const team = new Map();
+  raw.slice(1).flat().forEach(x => { const t = x.team; if (t && x.stats) team.set(t, (team.get(t) || 0) + (x.stats.rec_tgt || 0)); });
+  const d = {};
+  const rk = x => { const r = x.player.search_rank; return r > 0 && r < 1e6 ? r : 1e9; }; // Sleeper's overall player ranking
+  ['QB','RB','WR','TE'].forEach((p, i) => {
+    d[p] = raw[i].filter(x => x.player && x.stats && gp(x.stats) > 0)
+      .sort((a, b) => b.stats.pts_ppr - a.stats.pts_ppr)
+      .map((x, j) => ({ x, j })).sort((a, b) => rk(a.x) - rk(b.x) || a.j - b.j).slice(0, COUNTS[p])
+      .map(({ x, j }) => { const s = x.stats, g = gp(s), t = x.team || x.player.team || 'FA';
+        return { id: String(x.player_id), name: `${x.player.first_name} ${x.player.last_name}`, team: t, pos: p,
+          ppg: s.pts_ppr / g, ypc: s.rush_att ? s.rush_yd / s.rush_att : 0, tpg: (s.rec_tgt || 0) / g,
+          ts: (s.rec_tgt || 0) / (team.get(t) || 1), td: s.pass_td || 0, int: s.pass_int || 0, s: pick(s), pr: j + 1 }; });
+  });
+  localStorage.setItem('ts:data3', JSON.stringify({ t: Date.now(), season, d }));
+  return d;
+}
+
+function chips(p) {
+  const m = { QB: [['PPG', f1(p.ppg)], ['TD:INT', p.int ? f1(p.td / p.int) : p.td + ':0']],
+    RB: [['PPG', f1(p.ppg)], ['YPC', f1(p.ypc)], ['TGT/G', f1(p.tpg)]],
+    WR: [['PPG', f1(p.ppg)], ['TGT share', Math.round(p.ts * 100) + '%']] };
+  m.TE = m.WR;
+  return m[p.pos].map(([l, v]) => `<div><b>${v}</b><i>${l}</i></div>`).join('');
+}
+function card(p) {
+  const ini = p.name.split(' ').map(w => w[0]).join('').slice(0, 2);
+  const h = hideMode && !revealed.has(p.id) ? ' is-hidden' : '';
+  return `<div class="card${h}" data-id="${p.id}"><div class="flip">
+    <div class="face front" data-i="${esc(ini)}"><img loading="lazy" alt="" src="https://sleepercdn.com/content/nfl/players/${p.id}.jpg" onerror="this.remove()">
+    <div class="top"><span class="nm">${esc(p.name)}</span><span class="tm">${esc(p.team)}</span></div><div class="ov"><div class="st">${chips(p)}</div></div></div>
+    <div class="face back"><span>${p.pos}</span></div></div></div>`;
+}
+
+const key = () => 'ts:' + pos;
+function loadState() {
+  let s = JSON.parse(localStorage.getItem(key()) || 'null');
+  const ok = new Set(DATA[pos].map(p => p.id));
+  if (!s) s = { tiers: DEFAULT_TIERS.map((l, i) => ({ id: uid(), label: l, color: COLORS[i], ids: [] })) };
+  s.tiers.forEach(t => t.ids = t.ids.filter(i => ok.has(i)));
+  return s;
+}
+const save = () => localStorage.setItem(key(), JSON.stringify(state));
+
+function render() {
+  const by = Object.fromEntries(DATA[pos].map(p => [p.id, p]));
+  const placed = new Set(state.tiers.flatMap(t => t.ids));
+  tiersEl.innerHTML = state.tiers.map(t => `<section class="tier" data-id="${t.id}">
+    <div class="lab" style="background:${t.color}"><span class="grip" title="Drag to reorder">&#8942;&#8942;</span>
+    <button class="del" title="Delete tier">&times;</button>
+    <div class="txt" contenteditable="plaintext-only" spellcheck="false">${esc(t.label)}</div>
+    <input type="color" class="sw" value="${t.color}" title="Tier color"></div>
+    <div class="zone">${t.ids.filter(i => by[i]).map(i => card(by[i])).join('')}</div></section>`).join('');
+  poolEl.innerHTML = DATA[pos].filter(p => !placed.has(p.id)).map(card).join('');
+  const opts = { group: 'p', animation: 200, forceFallback: true, fallbackOnBody: true, fallbackTolerance: 4,
+    delay: 120, delayOnTouchOnly: true, ghostClass: 'ghost', onEnd: sync };
+  document.querySelectorAll('.zone').forEach(z => new Sortable(z, opts));
+  new Sortable(poolEl, opts);
+  count();
+}
+const pw = $('.poolwrap');
+const setMin = m => { pw.classList.toggle('min', m); $('#ptog').textContent = m ? 'Expand' : 'Collapse'; try { localStorage.setItem('ts:poolmin', m ? 1 : 0); } catch (e) {} };
+$('#ptog').onclick = () => setMin(!pw.classList.contains('min'));
+$('#theme').onclick = () => { const d = document.documentElement, t = d.dataset.theme === 'dark' ? 'light' : 'dark'; d.dataset.theme = t; try { localStorage.setItem('ts:theme', t); } catch (e) {} };
+try { setMin(localStorage.getItem('ts:poolmin') === '1'); } catch (e) {}
+const count = () => { const n = poolEl.children.length; $('#count').textContent = `${n} left to place`; $('.poolwrap').hidden = !n; };
+
+function sync() {
+  const old = Object.fromEntries(state.tiers.map(t => [t.id, t]));
+  state.tiers = [...tiersEl.children].map(el => ({ ...old[el.dataset.id],
+    ids: [...el.querySelectorAll('.card')].map(c => c.dataset.id) }));
+  save(); count();
+}
+new Sortable(tiersEl, { handle: '.grip', animation: 200, onEnd: sync });
+
+tiersEl.addEventListener('input', e => {
+  const el = e.target.closest('.tier'); if (!el) return;
+  const t = state.tiers.find(t => t.id === el.dataset.id);
+  if (e.target.matches('.sw')) { t.color = e.target.value; el.querySelector('.lab').style.background = t.color; }
+  else t.label = e.target.textContent;
+  save();
+});
+tiersEl.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches('.txt')) { e.preventDefault(); e.target.blur(); } });
+tiersEl.addEventListener('click', e => {
+  if (!e.target.matches('.del')) return;
+  state.tiers = state.tiers.filter(t => t.id !== e.target.closest('.tier').dataset.id);
+  save(); render();
+});
+$('#add').onclick = () => {
+  state.tiers.push({ id: uid(), label: 'New', color: COLORS[state.tiers.length % COLORS.length], ids: [] });
+  save(); render();
+  const t = [...document.querySelectorAll('.txt')].pop(); t.scrollIntoView({ block: 'center' });
+};
+$('#reset').onclick = () => {
+  if (!confirm(`Reset the ${pos} tier list? All placements and tiers go back to default.`)) return;
+  localStorage.removeItem(key()); state = loadState(); render();
+};
+$('#tabs').onclick = e => {
+  const b = e.target.closest('button'); if (!b || !DATA) return;
+  document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x === b));
+  pos = b.dataset.p; state = loadState(); render();
+};
+
+// Hide / reveal
+hideBtn.onclick = () => {
+  hideMode = !hideMode; revealed.clear();
+  hideBtn.textContent = hideMode ? 'Reveal all' : 'Hide players';
+  document.querySelectorAll('.card').forEach((c, i) => setTimeout(() => c.classList.toggle('is-hidden', hideMode), i * 16));
+};
+document.addEventListener('click', e => {
+  const c = e.target.closest('.card.is-hidden'); if (!c) return;
+  revealed.add(c.dataset.id); c.dataset.just = Date.now(); c.classList.remove('is-hidden');
+});
+
+// Player detail (double-click)
+const KEYS = ['gp','pts_ppr','pass_cmp','pass_att','pass_yd','pass_td','pass_int','pass_sack','rush_att','rush_yd','rush_td','rec_tgt','rec','rec_yd','rec_td','fum_lost'];
+const pick = s => Object.fromEntries(KEYS.filter(k => s[k] != null).map(k => [k, s[k]]));
+const v = (s, k) => s[k] || 0;
+const pct = (a, b) => b ? Math.round(a / b * 100) + '%' : '-';
+const rt = (a, b) => b ? (a / b).toFixed(1) : '-';
+function tiles(p) {
+  const s = p.s, n = k => v(s, k);
+  const by = {
+    QB: [['Pass yds', n('pass_yd')], ['Pass TD', n('pass_td')], ['INT', n('pass_int')], ['Comp %', pct(n('pass_cmp'), n('pass_att'))],
+         ['Yds/att', rt(n('pass_yd'), n('pass_att'))], ['Sacks', n('pass_sack')], ['Rush yds', n('rush_yd')], ['Rush TD', n('rush_td')]],
+    RB: [['Carries', n('rush_att')], ['Rush yds', n('rush_yd')], ['YPC', rt(n('rush_yd'), n('rush_att'))], ['Rush TD', n('rush_td')],
+         ['Targets', n('rec_tgt')], ['TGT/G', f1(p.tpg)], ['TGT share', Math.round(p.ts * 100) + '%'], ['Rec', n('rec')], ['Rec yds', n('rec_yd')], ['Rec TD', n('rec_td')]],
+    WR: [['Targets', n('rec_tgt')], ['TGT/G', f1(p.tpg)], ['TGT share', Math.round(p.ts * 100) + '%'], ['Rec', n('rec')],
+         ['Catch %', pct(n('rec'), n('rec_tgt'))], ['Rec yds', n('rec_yd')], ['Yds/rec', rt(n('rec_yd'), n('rec'))], ['Rec TD', n('rec_td')]] };
+  by.TE = by.WR;
+  return [['PPG', f1(p.ppg)], ['Games', n('gp')], ['PPR points', f1(n('pts_ppr'))], ...by[p.pos], ['Fumbles lost', n('fum_lost')]];
+}
+const COLS = {
+  QB: [['PPR', s => f1(v(s,'pts_ppr'))], ['C/A', s => `${v(s,'pass_cmp')}/${v(s,'pass_att')}`], ['Pass yds', s => v(s,'pass_yd')], ['TD', s => v(s,'pass_td')],
+       ['INT', s => v(s,'pass_int')], ['Rush yds', s => v(s,'rush_yd')], ['Rush TD', s => v(s,'rush_td')]],
+  RB: [['PPR', s => f1(v(s,'pts_ppr'))], ['Car', s => v(s,'rush_att')], ['Rush yds', s => v(s,'rush_yd')], ['YPC', s => rt(v(s,'rush_yd'), v(s,'rush_att'))],
+       ['Rush TD', s => v(s,'rush_td')], ['Tgt', s => v(s,'rec_tgt')], ['Rec', s => v(s,'rec')], ['Rec yds', s => v(s,'rec_yd')], ['Rec TD', s => v(s,'rec_td')]],
+  WR: [['PPR', s => f1(v(s,'pts_ppr'))], ['Tgt', s => v(s,'rec_tgt')], ['Rec', s => v(s,'rec')], ['Rec yds', s => v(s,'rec_yd')],
+       ['Rec TD', s => v(s,'rec_td')], ['Rush yds', s => v(s,'rush_yd')]] };
+COLS.TE = COLS.WR;
+
+let LOGS, openId;
+async function getLogs() {
+  if (LOGS) return LOGS;
+  const c = JSON.parse(localStorage.getItem('ts:logs2') || 'null');
+  if (c && c.season === season && Date.now() - c.t < 36e5) return LOGS = c.L;
+  const ids = Object.values(DATA).flat().map(p => p.id);
+  const wk = await Promise.all(Array.from({ length: 18 }, (_, i) =>
+    getJSON(`https://api.sleeper.app/v1/stats/nfl/regular/${season}/${i + 1}`).catch(() => null)));
+  if (wk.every(m => !m)) throw new Error('Game logs are unavailable right now');
+  const L = {};
+  wk.forEach((m, i) => { if (!m) return; ids.forEach(id => { const s = m[id];
+    if (s && (s.gp || s.gms_active || s.pts_ppr != null)) (L[id] = L[id] || []).push([i + 1, pick(s)]); }); });
+  try { localStorage.setItem('ts:logs2', JSON.stringify({ t: Date.now(), season, L })); } catch (e) {}
+  return LOGS = L;
+}
+async function openPlayer(id) {
+  const p = DATA[pos].find(x => x.id === id); if (!p) return;
+  openId = id;
+  $('#dbody').innerHTML = `<div class="dh"><img alt="" src="https://sleepercdn.com/content/nfl/players/${p.id}.jpg" onerror="this.remove()">
+    <div><h3>${esc(p.name)}</h3><p>${esc(p.team)}, ${p.pos}${p.pr} in PPR points, ${season} season</p></div></div>
+    <div class="tiles">${tiles(p).map(([l, x]) => `<div class="tile"><b>${x}</b><span>${l}</span></div>`).join('')}</div>
+    <div class="log" id="log">Loading game log...</div>`;
+  if (!$('#dlg').open) $('#dlg').showModal();
+  let html;
+  try {
+    const rows = ((await getLogs())[id] || []).sort((a, b) => a[0] - b[0]), cols = COLS[p.pos];
+    html = rows.length ? `<h4>Game log</h4><table><tr><th>Week</th>${cols.map(c => `<th>${c[0]}</th>`).join('')}</tr>` +
+      rows.map(([w, s]) => `<tr><td>${w}</td>${cols.map((c, i) => `<td${i ? '' : ' class="pp"'}>${c[1](s)}</td>`).join('')}</tr>`).join('') + '</table>'
+      : 'No games played yet this season.';
+  } catch (e) { html = esc(e.message); }
+  if (openId === id) $('#log').innerHTML = html;
+}
+document.addEventListener('dblclick', e => {
+  const c = e.target.closest('.card');
+  if (!c || !DATA || c.classList.contains('is-hidden') || Date.now() - (+c.dataset.just || 0) < 700) return;
+  getSelection().removeAllRanges(); openPlayer(c.dataset.id);
+});
+$('#dx').onclick = () => $('#dlg').close();
+$('#dlg').onclick = e => { if (e.target === $('#dlg')) $('#dlg').close(); };
+
+(async function init() {
+  try {
+    DATA = await loadData();
+    $('#sub').textContent = `${season} season, PPR. Stats via Sleeper`;
+    $('#msg').remove(); state = loadState(); render();
+  } catch (err) {
+    console.error(err);
+    $('#msg').innerHTML = `Couldn't load player data.<br><small>${esc(err.message)}</small><br><br><button class="btn pri" onclick="location.reload()">Try again</button>`;
+  }
+})();
+</script>
+</body>
+</html>

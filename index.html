@@ -137,7 +137,7 @@ const $ = s => document.querySelector(s);
 const tiersEl = $('#tiers'), poolEl = $('#pool'), hideBtn = $('#hide');
 const uid = () => Math.random().toString(36).slice(2, 8);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const f1 = n => n.toFixed(1);
+const f1 = n => (typeof n === 'number' && isFinite(n)) ? n.toFixed(1) : '-';
 let DATA, pos = 'QB', state, hideMode = false, season = SEASON;
 const revealed = new Set();
 
@@ -166,7 +166,7 @@ async function getRaw(yr) {
 }
 
 async function loadData() {
-  const c = JSON.parse(localStorage.getItem('ts:data3') || 'null');
+  const c = JSON.parse(localStorage.getItem('ts:data4') || 'null');
   if (c && Date.now() - c.t < 6 * 36e5) { season = c.season; return c.d; }
   let raw;
   for (let k = 0; k < 2; k++) {
@@ -179,7 +179,7 @@ async function loadData() {
   const d = {};
   const rk = x => { const r = x.player.search_rank; return r > 0 && r < 1e6 ? r : 1e9; }; // Sleeper's overall player ranking
   ['QB','RB','WR','TE'].forEach((p, i) => {
-    d[p] = raw[i].filter(x => x.player && x.stats && gp(x.stats) > 0)
+    d[p] = raw[i].filter(x => x.player && x.stats && gp(x.stats) > 0 && typeof x.stats.pts_ppr === 'number')
       .sort((a, b) => b.stats.pts_ppr - a.stats.pts_ppr)
       .map((x, j) => ({ x, j })).sort((a, b) => rk(a.x) - rk(b.x) || a.j - b.j).slice(0, COUNTS[p])
       .map(({ x, j }) => { const s = x.stats, g = gp(s), t = x.team || x.player.team || 'FA';
@@ -187,7 +187,7 @@ async function loadData() {
           ppg: s.pts_ppr / g, ypc: s.rush_att ? s.rush_yd / s.rush_att : 0, tpg: (s.rec_tgt || 0) / g,
           ts: (s.rec_tgt || 0) / (team.get(t) || 1), td: s.pass_td || 0, int: s.pass_int || 0, s: pick(s), pr: j + 1 }; });
   });
-  localStorage.setItem('ts:data3', JSON.stringify({ t: Date.now(), season, d }));
+  localStorage.setItem('ts:data4', JSON.stringify({ t: Date.now(), season, d }));
   return d;
 }
 
